@@ -29,17 +29,14 @@ static void SignalHandler(int)
 {
     signalReceived = 1;
 
-    if (sharedPtr != nullptr)
+    if (sharedPtr != nullptr && semPtr != SEM_FAILED)
     {
         sem_wait(semPtr);
         sharedPtr->terminate = 1;
-        pid_t otherPid = sharedPtr->serverPid;
+        pid_t serverPid = sharedPtr->serverPid;
         sem_post(semPtr);
 
-        if (otherPid > 0)
-        {
-            kill(otherPid, SIGUSR1);
-        }
+        if (serverPid > 0) kill(serverPid, SIGUSR1);
     }
 }
 
@@ -50,35 +47,24 @@ static void ConnectSharedMemory()
     for (int i = 0; i < 30; ++i)
     {
         shmFd = shm_open(ShmName, O_RDWR, 0);
-        if (shmFd != -1)
-        {
-            break;
-        }
+        if (shmFd != -1) break;
         sleep(1);
     }
 
-    if (shmFd == -1)
-    {
-        perror("shm_open");
-        exit(EXIT_FAILURE);
-    }
+    if (shmFd == -1) { perror("shm_open"); exit(EXIT_FAILURE); }
 
     void * mapped = mmap(nullptr, size, PROT_READ | PROT_WRITE, MAP_SHARED, shmFd, 0);
-    if (mapped == MAP_FAILED)
-    {
-        perror("mmap");
-        exit(EXIT_FAILURE);
-    }
-
+    if (mapped == MAP_FAILED) { perror("mmap"); exit(EXIT_FAILURE); }
     sharedPtr = static_cast<Shared *>(mapped);
 
-    semPtr = sem_open(SemName, 0);
-    if (semPtr == SEM_FAILED)
+    for (int i = 0; i < 30; ++i)
     {
-        perror("sem_open");
-        munmap(mapped, size);
-        exit(EXIT_FAILURE);
+        semPtr = sem_open(SemName, 0);
+        if (semPtr != SEM_FAILED) break;
+        sleep(1);
     }
+
+    if (semPtr == SEM_FAILED) { perror("sem_open"); munmap(mapped, size); exit(EXIT_FAILURE); }
 
     sem_wait(semPtr);
     sharedPtr->clientPid = getpid();
@@ -88,29 +74,14 @@ static void ConnectSharedMemory()
 static void Cleanup()
 {
     const size_t size = sizeof(Shared);
-
-    if (semPtr != SEM_FAILED)
-    {
-        sem_close(semPtr);
-    }
-
-    if (sharedPtr != nullptr)
-    {
-        munmap(sharedPtr, size);
-    }
-
-    if (shmFd != -1)
-    {
-        close(shmFd);
-    }
-
-    sem_unlink(SemName);
-    shm_unlink(ShmName);
+    if (semPtr != SEM_FAILED) { sem_close(semPtr); semPtr = SEM_FAILED; }
+    if (sharedPtr != nullptr) { munmap(sharedPtr, size); sharedPtr = nullptr; }
+    if (shmFd != -1) { close(shmFd); shmFd = -1; }
 }
 
 int main()
 {
-    struct sigaction act {};
+    struct sigaction act{};
     act.sa_handler = SignalHandler;
     sigaction(SIGINT, &act, nullptr);
     sigaction(SIGTERM, &act, nullptr);
@@ -120,25 +91,13 @@ int main()
 
     std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
-    for (;;)
+    while (!signalReceived)
     {
-        if (signalReceived)
-        {
-            break;
-        }
-
-        const int number = std::rand() % 100;
+        int number = std::rand() % 100;
 
         sem_wait(semPtr);
-
-        if (sharedPtr->terminate != 0)
-        {
-            sem_post(semPtr);
-            break;
-        }
-
+        if (sharedPtr->terminate != 0) { sem_post(semPtr); break; }
         sharedPtr->number = number;
-
         sem_post(semPtr);
 
         sleep(1);
