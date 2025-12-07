@@ -11,8 +11,8 @@
 
 typedef struct {
     sem_t seller_free[DEPTS]; // семафор каждого продавца
-    sem_t print_lock;          // семафор для синхронного вывода
-    int stop;                  // признак завершения
+    sem_t print_lock; // семафор для синхронного вывода
+    int stop; // признак завершения
 } shared_t;
 
 shared_t *shm = nullptr;
@@ -26,7 +26,7 @@ void safe_print(const char *msg) {
 }
 
 // процесс продавца
-void seller_proc(int id) {
+void seller_proc(const int id) {
     char buf[128];
     sprintf(buf, "[Seller %d] started\n", id);
     safe_print(buf);
@@ -51,15 +51,15 @@ void seller_proc(int id) {
 }
 
 // процесс покупателя
-void customer_proc(int cid) {
+void customer_proc(const int cid) {
     char buf[128];
     sprintf(buf, "   (Customer %d) entered shop\n", cid);
     safe_print(buf);
 
-    int visits = 1 + rand() % DEPTS;
+    const int visits = 1 + rand() % DEPTS;
 
     for (int i = 0; i < visits && !shm->stop; i++) {
-        int dept = rand() % DEPTS;
+        const int dept = rand() % DEPTS;
         sprintf(buf, "   (Customer %d) waiting for dept %d\n", cid, dept);
         safe_print(buf);
 
@@ -79,28 +79,29 @@ void customer_proc(int cid) {
 
 // обработчик Ctrl+C
 void sig_handler(int s) {
-    (void)s;
+    (void) s;
     if (shm) {
         shm->stop = 1;
 
         // чтобы продавцы не зависли
-        for (int i = 0; i < DEPTS; i++)
+        for (int i = 0; i < DEPTS; i++) {
             sem_post(&shm->seller_free[i]);
+        }
     }
 }
 
-int main(int argc, char **argv) {
+int main(const int argc, char **argv) {
     if (argc < 2) {
         printf("Usage: %s <num_customers>\n", argv[0]);
         return 1;
     }
 
-    int customers = atoi(argv[1]);
+    const int customers = atoi(argv[1]);
     srand(time(nullptr));
 
     // -------- shared memory --------
     shm = static_cast<shared_t *>(mmap(nullptr, sizeof(shared_t),
-        PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0));
+                                       PROT_READ | PROT_WRITE, MAP_SHARED | MAP_ANONYMOUS, -1, 0));
 
     shm->stop = 0;
     for (int i = 0; i < DEPTS; i++)
@@ -123,21 +124,25 @@ int main(int argc, char **argv) {
     }
 
     // ждём всех покупателей
-    for (int i = 0; i < customers; i++)
-        wait(NULL);
+    for (int i = 0; i < customers; i++) {
+        wait(nullptr);
+    }
 
     // сигнализируем продавцам завершить работу
     shm->stop = 1;
-    for (int i = 0; i < DEPTS; i++)
+    for (int i = 0; i < DEPTS; i++) {
         sem_post(&shm->seller_free[i]);
+    }
 
     // ждём всех продавцов
-    for (int i = 0; i < DEPTS; i++)
-        wait(NULL);
+    for (int i = 0; i < DEPTS; i++) {
+        wait(nullptr);
+    }
 
     // удаляем семафоры и shared memory
-    for (int i = 0; i < DEPTS; i++)
+    for (int i = 0; i < DEPTS; i++) {
         sem_destroy(&shm->seller_free[i]);
+    }
     sem_destroy(&shm->print_lock);
     munmap(shm, sizeof(shared_t));
 
