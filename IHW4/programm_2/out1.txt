@@ -1,0 +1,30 @@
+Customer 1 entered the store
+Customer 1 joined the queue at department 2
+Seller of department 2 is serving a customer
+Customer 2 entered the store
+Customer 2 joined the queue at department 1
+Seller of department 1 is serving a customer
+Customer 3 entered the store
+Customer 3 joined the queue at department 2
+Customer 4 entered the store
+Customer 4 joined the queue at department 3
+Seller of department 3 is serving a customer
+Customer 5 entered the store
+Customer 5 joined the queue at department 1
+Seller of department 2 is serving a customer
+Customer 1 joined the queue at department 3
+Customer 2 joined the queue at department 3
+Customer 3 joined the queue at department 1
+Customer 4 joined the queue at department 1
+Seller of department 3 is serving a customer
+Customer 5 joined the queue at department 3
+Customer 1 left the store
+Customer 2 left the store
+Customer 3 left the store
+Customer 4 joined the queue at department 2
+Customer 5 joined the queue at department 2
+Seller of department 1 is serving a customer
+Seller of department 3 is serving a customer
+Customer 4 left the store
+Customer 5 left the store
+Store day is finished
