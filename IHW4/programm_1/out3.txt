@@ -1,0 +1,90 @@
+Customer 1 entered the store
+Customer 1 joined the queue at department 2
+Seller of department 2 is serving a customer
+Customer 2 entered the store
+Customer 2 joined the queue at department 1
+Seller of department 1 is serving a customer
+Customer 3 entered the store
+Customer 3 joined the queue at department 1
+Customer 4 entered the store
+Customer 4 joined the queue at department 3
+Seller of department 3 is serving a customer
+Customer 5 entered the store
+Customer 5 joined the queue at department 1
+Customer 1 joined the queue at department 1
+Customer 6 entered the store
+Customer 6 joined the queue at department 1
+Customer 7 entered the store
+Customer 7 joined the queue at department 1
+Customer 2 joined the queue at department 2
+Customer 3 left the store
+Customer 8 entered the store
+Customer 8 joined the queue at department 1
+Customer 4 joined the queue at department 2
+Customer 9 entered the store
+Customer 9 joined the queue at department 3
+Customer 10 entered the store
+Customer 10 joined the queue at department 3
+Customer 5 left the store
+Seller of department 2 is serving a customer
+Customer 1 left the store
+Customer 6 joined the queue at department 3
+Customer 11 entered the store
+Customer 11 joined the queue at department 1
+Seller of department 1 is serving a customer
+Customer 7 left the store
+Customer 12 entered the store
+Customer 12 joined the queue at department 1
+Customer 2 left the store
+Customer 8 joined the queue at department 2
+Customer 13 entered the store
+Customer 13 joined the queue at department 1
+Customer 4 joined the queue at department 1
+Customer 9 joined the queue at department 2
+Customer 14 entered the store
+Customer 14 joined the queue at department 2
+Customer 10 joined the queue at department 1
+Customer 15 entered the store
+Customer 15 joined the queue at department 2
+Customer 6 left the store
+Customer 11 left the store
+Customer 16 entered the store
+Customer 16 joined the queue at department 1
+Customer 12 joined the queue at department 2
+Customer 17 entered the store
+Customer 17 joined the queue at department 2
+Customer 8 left the store
+Customer 13 left the store
+Customer 18 entered the store
+Customer 18 joined the queue at department 1
+Customer 4 left the store
+Seller of department 3 is serving a customer
+Customer 9 joined the queue at department 1
+Customer 14 joined the queue at department 3
+Customer 19 entered the store
+Customer 19 joined the queue at department 2
+Customer 10 joined the queue at department 2
+Customer 15 joined the queue at department 1
+Customer 20 entered the store
+Customer 20 joined the queue at department 3
+Customer 16 left the store
+Customer 12 left the store
+Customer 17 joined the queue at department 1
+Customer 18 joined the queue at department 2
+Customer 9 left the store
+Customer 14 left the store
+Customer 19 joined the queue at department 3
+Customer 10 left the store
+Customer 15 joined the queue at department 3
+Customer 20 joined the queue at department 2
+Seller of department 2 is serving a customer
+Seller of department 1 is serving a customer
+Customer 17 left the store
+Customer 18 left the store
+Customer 19 joined the queue at department 1
+Customer 15 left the store
+Customer 20 left the store
+Seller of department 1 is serving a customer
+Seller of department 3 is serving a customer
+Customer 19 left the store
+Store day is finished
