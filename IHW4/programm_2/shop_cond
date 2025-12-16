@@ -1,0 +1,173 @@
+#include <pthread.h>
+#include <unistd.h>
+#include <cstdlib>
+#include <ctime>
+#include <iostream>
+#include <fstream>
+#include <vector>
+#include <algorithm>
+#include <cstring>
+
+#define DEPARTMENTS 3
+
+using namespace std;
+
+struct Department {
+    pthread_mutex_t mutex;
+    pthread_cond_t cond;
+    int queue;
+};
+
+Department deps[DEPARTMENTS];
+pthread_mutex_t print_mutex;
+bool running = true;
+ofstream logfile;
+
+void log_msg(const string &msg) {
+    pthread_mutex_lock(&print_mutex);
+    cout << msg << endl;
+    logfile << msg << endl;
+    pthread_mutex_unlock(&print_mutex);
+}
+
+/* Seller thread */
+void *seller_thread(void *arg) {
+    int id = *(int *) arg;
+    Department &d = deps[id];
+
+    while (running) {
+        pthread_mutex_lock(&d.mutex);
+
+        while (d.queue == 0 && running)
+            pthread_cond_wait(&d.cond, &d.mutex);
+
+        if (!running) {
+            pthread_mutex_unlock(&d.mutex);
+            break;
+        }
+
+        d.queue--;
+        pthread_mutex_unlock(&d.mutex);
+
+        log_msg("Seller of department " + to_string(id + 1) +
+                " is serving a customer");
+
+        sleep(1 + rand() % 3);
+    }
+    return nullptr;
+}
+
+/* Buyer thread */
+void *buyer_thread(void *arg) {
+    int id = *(int *) arg;
+    int visits = 1 + rand() % DEPARTMENTS;
+
+    vector<int> order = {0, 1, 2};
+    random_shuffle(order.begin(), order.end());
+
+    log_msg("Customer " + to_string(id) + " entered the store");
+
+    for (int i = 0; i < visits; i++) {
+        int dep = order[i];
+        Department &d = deps[dep];
+
+        pthread_mutex_lock(&d.mutex);
+        d.queue++;
+
+        log_msg("Customer " + to_string(id) +
+                " joined the queue at department " + to_string(dep + 1));
+
+        pthread_cond_signal(&d.cond);
+        pthread_mutex_unlock(&d.mutex);
+
+        sleep(1);
+    }
+
+    log_msg("Customer " + to_string(id) + " left the store");
+    return nullptr;
+}
+
+int read_config(const char *file) {
+    ifstream f(file);
+    string line;
+    int buyers = 0;
+
+    while (getline(f, line)) {
+        if (line.find("buyers=") == 0)
+            buyers = atoi(line.substr(7).c_str());
+    }
+    return buyers;
+}
+
+int main(int argc, char *argv[]) {
+    int buyers = 0;
+    const char *cfg = nullptr;
+    const char *out = nullptr;
+
+    for (int i = 1; i < argc; i++) {
+        if (!strcmp(argv[i], "-n"))
+            buyers = atoi(argv[++i]);
+        else if (!strcmp(argv[i], "-c"))
+            cfg = argv[++i];
+        else if (!strcmp(argv[i], "-o"))
+            out = argv[++i];
+    }
+
+    if (cfg)
+        buyers = read_config(cfg);
+
+    if (buyers <= 0 || !out) {
+        cout << "Usage:\n"
+                << "./shop_cond -n <buyers> -o <file>\n"
+                << "./shop_cond -c <config> -o <file>\n";
+        return 1;
+    }
+
+    logfile.open(out);
+    srand(time(nullptr));
+
+    pthread_mutex_init(&print_mutex, nullptr);
+
+    for (int i = 0; i < DEPARTMENTS; i++) {
+        pthread_mutex_init(&deps[i].mutex, nullptr);
+        pthread_cond_init(&deps[i].cond, nullptr);
+        deps[i].queue = 0;
+    }
+
+    pthread_t sellers[DEPARTMENTS];
+    int ids[DEPARTMENTS];
+
+    for (int i = 0; i < DEPARTMENTS; i++) {
+        ids[i] = i;
+        pthread_create(&sellers[i], nullptr,
+                       seller_thread, &ids[i]);
+    }
+
+    vector<pthread_t> buyers_t(buyers);
+    vector<int> buyer_ids(buyers);
+
+    for (int i = 0; i < buyers; i++) {
+        buyer_ids[i] = i + 1;
+        pthread_create(&buyers_t[i], nullptr,
+                       buyer_thread, &buyer_ids[i]);
+        usleep(200000);
+    }
+
+    for (int i = 0; i < buyers; i++)
+        pthread_join(buyers_t[i], nullptr);
+
+    running = false;
+    for (int i = 0; i < DEPARTMENTS; i++) {
+        pthread_mutex_lock(&deps[i].mutex);
+        pthread_cond_signal(&deps[i].cond);
+        pthread_mutex_unlock(&deps[i].mutex);
+    }
+
+    for (int i = 0; i < DEPARTMENTS; i++)
+        pthread_join(sellers[i], nullptr);
+
+    log_msg("Store day is finished");
+
+    logfile.close();
+    return 0;
+}
